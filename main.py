@@ -38,32 +38,34 @@ STAGE3_MASS = 551
 FLOW_RATE_1 = (49758 - 21677) / 40
 FLOW_RATE_2 = (7458 - 4114) / 91
 
-STAGE1_THRUST = 1350000  # сила тяги первой ступени
-STAGE2_THRUST = 200000  # сила тяги второй ступени
+# STAGE1_THRUST = 1350000  # сила тяги первой ступени
+# STAGE2_THRUST = 200000  # сила тяги второй ступени
 
 
 def open_file():
-    with open("C:\\Users\\george\\Projects\\python_projects\\varkt\\data_mass.txt", encoding='utf-8') as f:
+    with open("/Users/macbook/Projects/PythonProjects/varkt_AdAstra/data_thrust.txt", encoding='utf-8') as f:
         table = csv.reader(f, delimiter=';', quotechar='"')
-        ksp_alt, ksp_speed, ksp_mass, ksp_dv = [], [], [], []
+        ksp_alt, ksp_speed, ksp_mass, ksp_dv, ksp_thrust = [], [], [], [], []
         for row in list(table)[1:]:
             ksp_alt.append(float(row[3]))
             ksp_speed.append(float(row[1]))
             ksp_mass.append(float(row[4]))
+            ksp_thrust.append(float(row[5]))
         tmp = ksp_speed[0]
         for v in ksp_speed:
             ksp_dv.append(v - tmp)
             tmp = v
-    return ksp_alt, ksp_speed, ksp_mass, ksp_dv
+    return ksp_alt, ksp_speed, ksp_mass, ksp_dv, ksp_thrust
 
 
 def main():
     cos_alpha = 1
     sin_alpha = 0
-    stage = 1
+    ksp_alt, ksp_speed, ksp_mass, ksp_dv, ksp_thrust = open_file()
     current_vx = 0
     current_vy = 0
     V = 0
+    stage = 1
     V_sq = 0
     current_x = 600000
     current_y = 0
@@ -76,9 +78,7 @@ def main():
     velocity[0] = V
     current_mass = STAGE1_MASS
     rocket_mass[0] = current_mass
-    current_thrust = STAGE1_THRUST
-
-    
+    current_thrust = ksp_thrust[0]
 
     for t in range(1, T):
         d_sq = current_x ** 2 + current_y ** 2
@@ -91,37 +91,40 @@ def main():
             stage = 2
             cos_alpha = 0
             sin_alpha = 1
-            print("stage 2")
+            # print("stage 2")
         
         if stage == 1:
-            if t < 40:
+            if t < 59:
                 current_mass = round(current_mass - FLOW_RATE_1, 6)
             else:
                 stage = 0
                 current_mass = STAGE2_MASS
-                current_thrust = 0
+                # current_thrust = 0
         elif stage == 2:
             if V_sq >= g * d:
                 stage = 3
             current_mass = round(current_mass - FLOW_RATE_2, 6)
-            current_thrust = STAGE2_THRUST
+            # current_thrust = STAGE2_THRUST
         elif stage == 3:
             current_mass = STAGE3_MASS
-            current_thrust = 0
 
+        current_thrust = ksp_thrust[t]
         rocket_mass[t] = current_mass       
-        
+
+        # p = max(0, p0 * (1 + (L * h / t0)) ** ((-g * m) / (r0 * L)))
+        # temp = max(t0 + L * h, 0)
+        # density = (p * m) / (r0 * temp)
         if h < 100000:
-            Fc = round(0.5 * s * 1.2754 * (V_sq) / 2, 6)
-        else: 
+            Fc = round(0.5 * s * 1.2754 * ((V_sq) ** 0.33) / 2, 6)
+        else:
             Fc = 0
         Fc_list[t] = Fc
 
         Ft = round(G * ((M * current_mass) / d_sq), 6)
 
-        delta_vx = round((current_thrust * cos_alpha - Fc * cos_alpha * 0 - Ft * (
+        delta_vx = round((current_thrust * cos_alpha - Fc * cos_alpha - Ft * (
                 current_x / d)) / current_mass, 6)
-        delta_vy = round((current_thrust * sin_alpha - Fc * sin_alpha * 0 - Ft * (
+        delta_vy = round((current_thrust * sin_alpha - Fc * sin_alpha - Ft * (
                 current_y / d)) / current_mass, 6)
         
         delta_vx_arr[t] = delta_vx
@@ -143,7 +146,7 @@ def main():
     # velocity_arr = [math.sqrt(vx ** 2 + vy ** 2) for vx, vy in zip(velocity_x, velocity_y)]
     # print(velocity_arr)
 
-    ksp_alt, ksp_speed, ksp_mass, ksp_dv = open_file()
+    
 
     fig, mass_total = plt.subplots()
     mass_total.set_title('Изменение массы ракеты')
@@ -153,12 +156,12 @@ def main():
     mass_total.plot(time_arr, ksp_mass[:T])
     mass_total.grid()
 
-    # fig, friction = plt.subplots()
-    # friction.set_title('Изменение силы сопротивления воздуха')
-    # friction.set_xlabel('Время, секунды')
-    # friction.set_ylabel('Сопротивление, ньютоны')
-    # friction.plot(time_arr, Fc_list)
-    # friction.grid()
+    fig, friction = plt.subplots()
+    friction.set_title('Изменение силы сопротивления воздуха')
+    friction.set_xlabel('Время, секунды')
+    friction.set_ylabel('Сопротивление, ньютоны')
+    friction.plot(time_arr, Fc_list)
+    friction.grid()
 
     fig, velocity_cur = plt.subplots()
     velocity_cur.set_title('Изменение скорости')
@@ -169,12 +172,19 @@ def main():
     velocity_cur.grid()
 
     fig, velocity_cur = plt.subplots()
-    velocity_cur.set_title('Изменение dV')
-    velocity_cur.set_ylabel('Скорость, метры в секунду')
+    velocity_cur.set_title('Изменение ускорения')
+    velocity_cur.set_ylabel('Ускорение, метры в секунду')
     velocity_cur.set_xlabel('Время в секунды')
     velocity_cur.plot(time_arr, delta_vx_arr)
     velocity_cur.plot(time_arr, ksp_dv[:T])
     velocity_cur.grid()
+
+    fig, thrust = plt.subplots()
+    thrust.set_title('Изменение силы тяги')
+    thrust.set_ylabel('Сила тяги, Кн')
+    thrust.set_xlabel('Время, с')
+    thrust.plot(time_arr, ksp_thrust[:T])
+    thrust.grid()
 
     fig, velocity_cur = plt.subplots()
     velocity_cur.set_title('Изменение высоты')
