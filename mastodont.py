@@ -44,7 +44,7 @@ FLOW_RATE_2 = (7458 - 4114) / 91
 
 
 def open_file():
-    with open("C:\\Users\\george\\Projects\\python_projects\\varkt\\data_sopr.txt", encoding='utf-8') as f:
+    with open("/Users/bebebe/Desktop/varkt_AdAstra/data/Mastodont_real.txt", encoding='utf-8') as f:
         table = csv.reader(f, delimiter=';', quotechar='"')
         ksp_alt, ksp_speed, ksp_mass, ksp_dv, ksp_thrust, ksp_friction = [], [], [], [], [], []
         for row in list(table)[1:]:
