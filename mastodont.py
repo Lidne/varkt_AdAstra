@@ -2,7 +2,7 @@ import math
 import matplotlib.pyplot as plt
 import csv
 
-T = 310  #
+T = 350  #
 
 rocket_mass = [0] * T
 velocity_x = [0] * T
@@ -33,18 +33,18 @@ L = -0.0065 # среднее значение вертикальной комп�
 cf = 0.5 * (3.7 / 7.2)
 
 # MASS = 49758
-STAGE1_MASS = 49758
-STAGE2_MASS = 7458
+STAGE1_MASS = 48758
+STAGE2_MASS = 7450
 STAGE3_MASS = 551
-FLOW_RATE_1 = (49758 - 21677) / 59
-FLOW_RATE_2 = (7458 - 4114) / 91
+FLOW_RATE_1 = (48758 - 20648) / 62
+FLOW_RATE_2 = (7450 - 4109) / 42
 
 # STAGE1_THRUST = 1350000  # сила тяги первой ступени
 # STAGE2_THRUST = 200000  # сила тяги второй ступени
 
 
 def open_file():
-    with open("/Users/bebebe/Desktop/varkt_AdAstra/data/Mastodont_real.txt", encoding='utf-8') as f:
+    with open("/Users/macbook/Projects/PythonProjects/varkt_AdAstra/Mastodont_real.txt", encoding='utf-8') as f:
         table = csv.reader(f, delimiter=';', quotechar='"')
         ksp_alt, ksp_speed, ksp_mass, ksp_dv, ksp_thrust, ksp_friction = [], [], [], [], [], []
         for row in list(table)[1:]:
@@ -89,18 +89,23 @@ def main():
         altitude_arr[t] = h
         # stage: 1 - первая ступень, 2 - вторая ступень, 3 - двигатели не работают
         # по времени подгоняй
-        if t < 59:
+        if t < 62:
             current_mass = round(current_mass - FLOW_RATE_1, 6)
-        elif stage != 2:
+        elif stage == 1:
             stage = 2
             current_mass = STAGE2_MASS
 
-        if t >= 238 and stage == 2:
+        if t >= 273 and stage == 2:
             current_mass = round(current_mass - FLOW_RATE_2, 6)
             cos_alpha = 0
             sin_alpha = -1
-            # print("stage 2")
-            # current_thrust = STAGE2_THRUST
+            
+        if t >= 315 and stage == 2:
+            stage = 3
+
+        if t >= 335 and stage == 3:
+            current_mass = STAGE3_MASS
+
 
         current_thrust = ksp_thrust[t]
         rocket_mass[t] = current_mass       
