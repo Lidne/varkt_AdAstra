@@ -2,7 +2,7 @@ import math
 import matplotlib.pyplot as plt
 import csv
 
-T = 310  #
+T = 520  #
 
 rocket_mass = [0] * T
 velocity_x = [0] * T
@@ -33,11 +33,11 @@ L = -0.0065  # среднее значение вертикальной комп
 cf = 0.5 * (3.7 / 7.2)
 
 # MASS = 49758
-STAGE1_MASS = 49758
+STAGE1_MASS = 46758
 STAGE2_MASS = 7458
 STAGE3_MASS = 551
-FLOW_RATE_1 = (49758 - 21677) / 59
-FLOW_RATE_2 = (7458 - 4114) / 91
+FLOW_RATE_1 = (46758 - 16853) / 144
+FLOW_RATE_2 = (7458 - 4105) / 42
 
 
 # STAGE1_THRUST = 1350000  # сила тяги первой ступени
@@ -45,7 +45,8 @@ FLOW_RATE_2 = (7458 - 4114) / 91
 
 
 def open_file():
-    with open("/Users/bebebe/Desktop/varkt_AdAstra/data/Skiper_data.txt", encoding='utf-8') as f:
+    # with open("/Users/bebebe/Desktop/varkt_AdAstra/data/Skiper_data.txt", encoding='utf-8') as f:
+    with open("C:\\Users\\george\\Projects\\python_projects\\varkt\\Skiper_data.txt", encoding='utf-8') as f:
         table = csv.reader(f, delimiter=';', quotechar='"')
         ksp_alt, ksp_speed, ksp_mass, ksp_dv, ksp_thrust, ksp_friction = [], [], [], [], [], []
         for row in list(table)[1:]:
@@ -90,18 +91,23 @@ def main():
         altitude_arr[t] = h
         # stage: 1 - первая ступень, 2 - вторая ступень, 3 - двигатели не работают
         # по времени подгоняй
-        if t < 127:
+        if t < 145 and stage == 1:
             current_mass = round(current_mass - FLOW_RATE_1, 6)
-        elif stage != 2:
+        elif stage == 1:
             stage = 2
             current_mass = STAGE2_MASS
 
-        if t >= 351 and stage == 2:
+        if t >= 391 and stage == 2:
             current_mass = round(current_mass - FLOW_RATE_2, 6)
             cos_alpha = 0
             sin_alpha = -1
             # print("stage 2")
             # current_thrust = STAGE2_THRUST
+        if t >= 432 and stage == 2:
+            stage = 3
+        if t >= 452 and stage == 3:
+            current_mass = STAGE3_MASS
+            
 
         current_thrust = ksp_thrust[t]
         rocket_mass[t] = current_mass
